@@ -1,0 +1,71 @@
+{
+ "actions": [],
+ "creation": "2026-04-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "grace_period_days",
+  "default_plan",
+  "warning_threshold_percent",
+  "trial_duration_days",
+  "service_api_key"
+ ],
+ "fields": [
+  {
+   "default": "7",
+   "fieldname": "grace_period_days",
+   "fieldtype": "Int",
+   "label": "Grace Period Days"
+  },
+  {
+   "fieldname": "default_plan",
+   "fieldtype": "Link",
+   "label": "Default Plan",
+   "options": "Alfred Plan"
+  },
+  {
+   "default": "80",
+   "fieldname": "warning_threshold_percent",
+   "fieldtype": "Int",
+   "label": "Warning Threshold Percent"
+  },
+  {
+   "default": "14",
+   "fieldname": "trial_duration_days",
+   "fieldtype": "Int",
+   "label": "Trial Duration Days"
+  },
+  {
+   "description": "For authenticating API calls from processing app",
+   "fieldname": "service_api_key",
+   "fieldtype": "Password",
+   "label": "Service API Key"
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "issingle": 1,
+ "links": [],
+ "modified": "2026-04-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Alfred Portal",
+ "name": "Alfred Admin Settings",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 0
+}

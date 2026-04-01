@@ -1,0 +1,126 @@
+{
+ "actions": [],
+ "autoname": "field:site_id",
+ "creation": "2026-04-01 00:00:00.000000",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "site_id",
+  "site_url",
+  "admin_email",
+  "company_name",
+  "current_plan",
+  "status",
+  "override_limits",
+  "override_expiry",
+  "trial_start",
+  "trial_end",
+  "total_tokens_used",
+  "total_conversations"
+ ],
+ "fields": [
+  {
+   "fieldname": "site_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Site ID",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "site_url",
+   "fieldtype": "Data",
+   "label": "Site URL"
+  },
+  {
+   "fieldname": "admin_email",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Admin Email",
+   "options": "Email",
+   "reqd": 1
+  },
+  {
+   "fieldname": "company_name",
+   "fieldtype": "Data",
+   "label": "Company Name"
+  },
+  {
+   "fieldname": "current_plan",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Current Plan",
+   "options": "Alfred Plan"
+  },
+  {
+   "default": "Active",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Status",
+   "options": "Active\nSuspended\nCancelled"
+  },
+  {
+   "default": "0",
+   "description": "Admin override for limits",
+   "fieldname": "override_limits",
+   "fieldtype": "Check",
+   "label": "Override Limits"
+  },
+  {
+   "depends_on": "eval:doc.override_limits",
+   "description": "When override expires",
+   "fieldname": "override_expiry",
+   "fieldtype": "Date",
+   "label": "Override Expiry"
+  },
+  {
+   "fieldname": "trial_start",
+   "fieldtype": "Date",
+   "label": "Trial Start"
+  },
+  {
+   "fieldname": "trial_end",
+   "fieldtype": "Date",
+   "label": "Trial End"
+  },
+  {
+   "fieldname": "total_tokens_used",
+   "fieldtype": "Int",
+   "label": "Total Tokens Used",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_conversations",
+   "fieldtype": "Int",
+   "label": "Total Conversations",
+   "read_only": 1
+  }
+ ],
+ "index_web_pages_for_search": 0,
+ "links": [],
+ "modified": "2026-04-01 00:00:00.000000",
+ "modified_by": "Administrator",
+ "module": "Alfred Portal",
+ "name": "Alfred Customer",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [],
+ "track_changes": 1
+}
