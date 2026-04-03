@@ -149,7 +149,7 @@ def run_tests():
 		print(f"  Found {len(subs)} subscription(s), status: {subs[0]['status']}")
 		print("  PASSED\n")
 
-		# Test 10: Billing — subscribe to plan
+		# Test 10: Billing - subscribe to plan
 		print("Test 10: Subscribe to plan...")
 		from alfred_admin.api.billing import subscribe_to_plan
 		result = subscribe_to_plan(test_site_id, "Test Free", "stripe_ref_123")

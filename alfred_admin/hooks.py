@@ -1,7 +1,7 @@
 app_name = "alfred_admin"
 app_title = "Alfred Admin"
 app_publisher = "Venkatesh"
-app_description = "Admin portal for Alfred — customer management, billing, usage monitoring"
+app_description = "Admin portal for Alfred - customer management, billing, usage monitoring"
 app_email = "venkatesh@example.com"
 app_license = "MIT"
 
