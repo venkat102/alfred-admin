@@ -84,12 +84,25 @@ def report_usage(site_id, tokens=0, conversations=0, active_users=0, date=None):
 	return {"status": "ok", "site_id": site_id, "date": usage_date}
 
 
+def _clamp_pipeline_mode(value):
+	"""Coerce a plan's pipeline_mode value to one of the known modes.
+
+	The processing app will also re-clamp, but returning a clean value
+	here means logs + audit don't show garbage tier values.
+	"""
+	mode = (value or "").lower().strip()
+	return mode if mode in ("full", "lite") else "full"
+
+
 @frappe.whitelist(allow_guest=True)
 def check_plan(site_id):
 	"""Check if a site is within its plan limits.
 
 	Returns:
-		allowed (bool), remaining_tokens, tier, reason
+		allowed (bool), remaining_tokens, tier, reason, pipeline_mode
+		pipeline_mode is the tier-locked mode ("full" | "lite") that the
+		processing app should use. Always present in the response so the
+		processing side doesn't need to guess which tier gets which mode.
 	"""
 	_validate_service_key()
 
@@ -99,20 +112,30 @@ def check_plan(site_id):
 			"remaining_tokens": 0,
 			"tier": "unknown",
 			"reason": f"Unknown site: {site_id}",
+			"pipeline_mode": None,
 		}
 
 	customer = frappe.get_doc("Alfred Customer", site_id)
 
-	# Admin override
+	# Admin override - valid THROUGH end of day on expiry date (<= not <).
+	# Operators who set override_expiry to "today" expect the override to
+	# cover the whole day, not be dead at 00:00:01.
 	if customer.override_limits:
 		if customer.override_expiry and getdate(customer.override_expiry) < getdate(today()):
 			pass  # Override expired, proceed with normal check
 		else:
+			# Override keeps whatever pipeline_mode the current plan specifies,
+			# so an elevated customer still gets the tier they paid for.
+			override_mode = None
+			if customer.current_plan and frappe.db.exists("Alfred Plan", customer.current_plan):
+				plan_doc = frappe.get_doc("Alfred Plan", customer.current_plan)
+				override_mode = _clamp_pipeline_mode(getattr(plan_doc, "pipeline_mode", None))
 			return {
 				"allowed": True,
 				"remaining_tokens": -1,
 				"tier": "override",
 				"reason": "Admin override active",
+				"pipeline_mode": override_mode or "full",
 			}
 
 	# Check customer status
@@ -122,6 +145,7 @@ def check_plan(site_id):
 			"remaining_tokens": 0,
 			"tier": customer.current_plan or "none",
 			"reason": f"Customer status: {customer.status}",
+			"pipeline_mode": None,
 		}
 
 	# Check plan limits
@@ -131,9 +155,11 @@ def check_plan(site_id):
 			"remaining_tokens": 0,
 			"tier": "none",
 			"reason": "No plan assigned",
+			"pipeline_mode": None,
 		}
 
 	plan = frappe.get_doc("Alfred Plan", customer.current_plan)
+	plan_pipeline_mode = _clamp_pipeline_mode(getattr(plan, "pipeline_mode", None))
 
 	# Get current month usage
 	from frappe.utils import get_first_day, get_last_day
@@ -152,9 +178,13 @@ def check_plan(site_id):
 	remaining_tokens = max(0, (plan.monthly_token_limit or 0) - tokens_used)
 	remaining_convs = max(0, (plan.monthly_conversation_limit or 0) - convs_used)
 
-	# Check warning threshold
-	settings = frappe.get_single("Alfred Admin Settings")
-	threshold = (settings.warning_threshold_percent or 80) / 100.0
+	# Check warning threshold. Settings singleton may not exist on fresh
+	# installs - fall back to sensible defaults rather than crashing.
+	try:
+		settings = frappe.get_single("Alfred Admin Settings")
+		threshold = (settings.warning_threshold_percent or 80) / 100.0
+	except Exception:
+		threshold = 0.8
 	token_usage_pct = tokens_used / max(plan.monthly_token_limit or 1, 1)
 
 	if remaining_tokens <= 0 or remaining_convs <= 0:
@@ -163,6 +193,7 @@ def check_plan(site_id):
 			"remaining_tokens": remaining_tokens,
 			"tier": plan.plan_name,
 			"reason": "Monthly limit exceeded",
+			"pipeline_mode": plan_pipeline_mode,
 		}
 
 	warning = None
@@ -176,6 +207,7 @@ def check_plan(site_id):
 		"tier": plan.plan_name,
 		"reason": None,
 		"warning": warning,
+		"pipeline_mode": plan_pipeline_mode,
 	}
 
 

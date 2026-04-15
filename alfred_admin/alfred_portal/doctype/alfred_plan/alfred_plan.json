@@ -10,6 +10,7 @@
   "monthly_token_limit",
   "monthly_conversation_limit",
   "max_users",
+  "pipeline_mode",
   "features",
   "is_active"
  ],
@@ -45,6 +46,15 @@
    "fieldname": "max_users",
    "fieldtype": "Int",
    "label": "Max Users"
+  },
+  {
+   "default": "full",
+   "description": "Which Alfred pipeline this tier grants. `full` runs the 6-agent SDLC crew; `lite` runs a single fused agent (~5x cheaper, ~5x faster, less cross-checking). Returned to the processing app via check_plan so tier-based mode override works.",
+   "fieldname": "pipeline_mode",
+   "fieldtype": "Select",
+   "label": "Pipeline Mode",
+   "options": "full\nlite",
+   "reqd": 1
   },
   {
    "fieldname": "features",

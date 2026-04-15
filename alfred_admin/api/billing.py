@@ -9,14 +9,42 @@ from frappe import _
 from frappe.utils import today, getdate, add_days, date_diff
 
 
+def _require_billing_admin():
+	"""Gate billing-mutation endpoints to System Manager only.
+
+	Without this, any logged-in user on the admin portal could
+	subscribe/cancel plans for any customer - the endpoints use
+	ignore_permissions=True internally so Frappe's normal doctype
+	perms don't protect them.
+	"""
+	if "System Manager" not in frappe.get_roles():
+		frappe.throw(
+			_("Only System Managers can manage subscriptions"),
+			frappe.PermissionError,
+		)
+
+
 def check_trial_expirations():
 	"""Daily scheduler job: check and handle expired trials.
 
 	- Sends warning 3 days before trial ends
 	- Cancels expired trials and suspends customer
+
+	Tolerates a missing Alfred Admin Settings singleton: the job runs with
+	a 7-day grace period fallback rather than crashing the scheduler.
+	Without this, a fresh install where the settings doc hasn't been
+	created yet would break every daily run until an admin manually
+	visits the settings page.
 	"""
-	settings = frappe.get_single("Alfred Admin Settings")
-	grace_days = settings.grace_period_days or 7
+	try:
+		settings = frappe.get_single("Alfred Admin Settings")
+		grace_days = settings.grace_period_days or 7
+	except Exception as e:
+		frappe.log_error(
+			f"Alfred Admin Settings not available, using 7-day grace period default: {e}",
+			"check_trial_expirations",
+		)
+		grace_days = 7
 
 	# Find expiring trials (3 days warning)
 	warning_date = add_days(today(), 3)
@@ -74,7 +102,9 @@ def check_trial_expirations():
 
 @frappe.whitelist()
 def subscribe_to_plan(customer_name, plan_name, payment_reference=""):
-	"""Create a new subscription for a customer."""
+	"""Create a new subscription for a customer. System-Manager only."""
+	_require_billing_admin()
+
 	customer = frappe.get_doc("Alfred Customer", customer_name)
 	plan = frappe.get_doc("Alfred Plan", plan_name)
 
@@ -111,7 +141,9 @@ def subscribe_to_plan(customer_name, plan_name, payment_reference=""):
 
 @frappe.whitelist()
 def cancel_subscription(customer_name):
-	"""Cancel a customer's active subscription."""
+	"""Cancel a customer's active subscription. System-Manager only."""
+	_require_billing_admin()
+
 	settings = frappe.get_single("Alfred Admin Settings")
 	grace_days = settings.grace_period_days or 7
 
